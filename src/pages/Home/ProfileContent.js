@@ -45,7 +45,7 @@ const ProfileContent = ()=>{
                         photoURL:url
                     })
                 })
-                updateDoc(docRef,data).then(()=>{
+                updateDoc(docRef,{...data,avatar: user.photoURL}).then(()=>{
                     message.open({key:messKey,type:'success', content: 'Updating profile successfully'})
                 }).catch(err=>{
                     message.open({key:messKey,type:'error', content: err.code})
@@ -97,7 +97,7 @@ const ProfileContent = ()=>{
                     label='Image'
                 >
                     
-                    <Upload listType="picture-card" maxCount={1} accept="image/png, image/jpeg" beforeUpload={() => false} fileList={fileList} onChange={onChange}>
+                    <Upload listType="picture-card" maxCount={1} accept="image/png, image/jpeg" beforeUpload={() => false} fileList={fileList} onChange={onChange} onRemove={() => false}>
                         <div>
                             <PlusOutlined/>
                             <div style={{marginTop:8}}>

@@ -1,7 +1,7 @@
 import React from "react"
 import {Form, Input, message, Checkbox, Button, Space} from "antd"
-import { LockOutlined,MailOutlined, GoogleCircleFilled, GithubFilled } from "@ant-design/icons";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, GithubAuthProvider } from "firebase/auth";
+import { LockOutlined,MailOutlined, GoogleCircleFilled, GithubFilled, FacebookFilled } from "@ant-design/icons";
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, GithubAuthProvider, FacebookAuthProvider } from "firebase/auth";
 import { getFirestore, getDoc, setDoc, doc } from 'firebase/firestore';
 import initApp from '../../db.js'
 import { useNavigate } from "react-router-dom";
@@ -35,6 +35,7 @@ const LoginPage = ()=>{
               email: user.email,
               name: user.displayName,
               dob: moment().format('YYYY-MM-DD'),
+              avatar: user.photoURL,
               createdAt: new Date(),
               updatedAt: null
             })
@@ -58,6 +59,31 @@ const LoginPage = ()=>{
               email: user.email,
               name: user.displayName,
               dob: moment().format('YYYY-MM-DD'),
+              avatar: user.photoURL,
+              createdAt: new Date(),
+              updatedAt: null
+            })
+          }
+          message.open({key:key,type:'success', content:'Login successfully'})
+          navigate('/')
+        }).catch(err=> message.open({key:key,type:'error', content:`Error: ${err.code}`}))
+      }
+      const signInWithFacebook= ()=>{
+        const key = 'login'
+        const provider = new FacebookAuthProvider();
+        provider.setCustomParameters({prompt: 'select_account'})
+        provider.addScope('user_birthday')
+        message.open({key:key,type:'loading', content:'Signing...'})
+        signInWithPopup(auth,provider).then(async userCredential=>{
+          const user = userCredential.user;
+          const docRef = doc(getFirestore(initApp),"users",user.uid)
+          const docSnap = await getDoc(docRef)
+          if(!docSnap.exists()){
+            setDoc(docRef,{
+              email: user.email,
+              name: user.displayName,
+              dob: moment().format('YYYY-MM-DD'),
+              avatar: user.photoURL,
               createdAt: new Date(),
               updatedAt: null
             })
@@ -116,6 +142,7 @@ const LoginPage = ()=>{
               <p style={{fontSize:'14px'}}>Sign in with: </p>
               <Button onClick={signInWithGoogle}><GoogleCircleFilled /></Button>
               <Button onClick={signInWithGithub}><GithubFilled /></Button>
+              <Button onClick={signInWithFacebook}><FacebookFilled /></Button>
               </Space>
             </Form>
           </div>

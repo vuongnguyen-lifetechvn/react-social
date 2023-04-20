@@ -1,4 +1,4 @@
-import { Avatar, Button, Card, Form, Input, Modal, Skeleton, Space, message } from "antd"
+import { Avatar, Button, Card, Form, Input, List, Modal, Skeleton, Space, message } from "antd"
 import Meta from "antd/es/card/Meta";
 import { HeartOutlined, CommentOutlined,EllipsisOutlined, EditOutlined, DeleteOutlined} from "@ant-design/icons";
 import { useState } from "react";
@@ -6,6 +6,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore,collection, addDoc, query, orderBy } from "firebase/firestore";
 import { useCollection } from "react-firebase-hooks/firestore";
 import initApp from "../../db";
+import moment from "moment";
 
 const BlogContent = ()=>{
     
@@ -33,7 +34,7 @@ const BlogContent = ()=>{
             title: values['title'],
             content: values['content']?values['content']: '',
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: null
         }
         message.open({key:messKey, type:'loading', content:'Creating post...'})
         addDoc(colRef,data).then(
@@ -50,27 +51,34 @@ const BlogContent = ()=>{
         <Button type="primary" onClick={toggleModal}>Create new blog</Button>
         {error&&<h4 style={{textAlign:'center', color:'red'}}>{error}</h4>}
         <Skeleton loading ={loading} active>
-            <div style={{display:"flex", justifyContent:"space-evenly", flexWrap:'wrap'}}>
-                {value&&value.docs.length > 0 ? value.docs.map((doc,index)=> {
-                    return (
-                    <Card
-                        key={index}
-                        style={{ minWidth: 600, margin: 4}}
-                        actions={[
-                        <HeartOutlined  key="like" />,
-                        <CommentOutlined key="comment" />,
-                        <EllipsisOutlined key="ellipsis" />,
-                        ]}
-                        extra={<a onClick={(e)=>{e.preventDefault()}}>Read more</a>}
-                    >
-                        <Meta
-                            avatar={<Avatar src= {user.photoURL} />}
-                            title={`${doc.data().title}`}
-                            description={`${doc.data().content !== "" ?doc.data().content: "There is no content" }`}
-                        />
-                    </Card>)
-                }): <h4 style={{textAlign:'center'}}>You don't have any blog</h4>}
-            </div>
+                {value&&value.docs.length > 0 ? 
+                    <List
+                        grid
+                        itemLayout="horizontal"
+                        size="default"
+                        dataSource={value.docs}
+                        renderItem={(doc,index)=>(
+                            <List.Item style={{minWidth: 600, marginLeft: 16, marginTop: 8}}>
+                                 <Card
+                                key={index}
+                                actions={[
+                                <HeartOutlined  key="like" />,
+                                <CommentOutlined key="comment" />,
+                                <EllipsisOutlined key="ellipsis" />,
+                                ]}
+                                extra={<a onClick={(e)=>{e.preventDefault()}}>Read more</a>}
+                            >
+                                <List.Item.Meta
+                                    avatar={<Avatar src={user.photoURL}/>}
+                                    title={doc.data().title}
+                                    description={moment(doc.data().createdAt.toDate()).fromNow()}
+                                />
+                                {`${doc.data().content !== "" ? doc.data().content : "There is no content" }`}
+                            </Card>
+                            </List.Item>
+                        )}
+                    />
+                : <h4 style={{textAlign:'center'}}>You don't have any blog</h4>}
         </Skeleton>
         </Space>
         <Modal 

@@ -1,7 +1,7 @@
 import React from "react"
 import {Form, Input, message, Checkbox, Button, DatePicker} from "antd"
 import { LockOutlined,MailOutlined, UserOutlined, CalendarOutlined } from "@ant-design/icons";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { setDoc, doc, getFirestore } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import initApp from '../../db.js'
@@ -19,11 +19,13 @@ const RegisterPage = ()=>{
             name: values['username'],
             email: values['email'],
             dob: values['dateOfBirth'].format('YYYY-MM-DD'),
+            avatar: 'https://firebasestorage.googleapis.com/v0/b/vuongnguyen-social.appspot.com/o/avatar%2FDefault.png?alt=media',
             createdAt: new Date(),
             updateAt: null
         }
         createUserWithEmailAndPassword(auth,values['email'],values['password']).then(async (userCredential)=>{
             const user = userCredential.user;
+            await updateProfile(user, {displayName: data.name})
             await setDoc(doc(db,"users",user.uid),data);
             messInfo = {...messInfo,type:'success',content:'Sign up successfully'}
             setTimeout(navigate('/login'),2000)

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Layout,Menu,theme } from 'antd';
-import { HomeOutlined,BookOutlined, UserOutlined, SettingOutlined, LogoutOutlined, LoginOutlined} from '@ant-design/icons';
+import { Layout,Menu,Row,Skeleton,theme, Badge, Space } from 'antd';
+import { HomeOutlined,BookOutlined, UserOutlined, SettingOutlined, LogoutOutlined, LoginOutlined, SearchOutlined} from '@ant-design/icons';
 import HomeContent from './HomeContent';
 import BlogContent from './BlogContent'
 import ProfileContent from './ProfileContent';
 import { useNavigate } from 'react-router-dom';
 import initApp from '../../db';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import NotAuth from '../Error/403';
+import SearchContent from './SearchContent';
 
 
 const { Header, Footer, Content } = Layout;
@@ -38,6 +38,10 @@ const HomePage =  ()=>{
         label:'Profiles',
         key:'profile',
         icon:<UserOutlined />
+    },{
+        label:'Search',
+        key:'search',
+        icon:<SearchOutlined />
     }, {
         label:'Settings',
         key:'setting',
@@ -74,6 +78,9 @@ const HomePage =  ()=>{
             case 'profile':
                 SetcurrentContent(<ProfileContent/>)
             break;
+            case 'search':
+                SetcurrentContent(<SearchContent/>)
+            break;
             default:
                 break;
         }
@@ -103,7 +110,7 @@ const HomePage =  ()=>{
                     background: colorBgContainer,
                   }}
             >
-                {user?currentContent:<NotAuth/>}
+                {user?currentContent:<Skeleton active/>}
             </Content>
             <Footer>
                   <h3 style={{textAlign:'center'}}>Ant Design ©2023 Created by Ant UED</h3>
