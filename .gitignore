@@ -5,3 +5,4 @@ build/
 
 .firebaserc
 firebase.json
+.env

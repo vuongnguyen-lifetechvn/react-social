@@ -17,9 +17,9 @@ const ProfileContent = ()=>{
     const docRef = doc(db,'users',user.uid)
     const [value, loading, error] = useDocumentOnce(docRef);
     const onReload = ()=>{
-        formRef.current?.setFieldsValue({
+        value && formRef.current?.setFieldsValue({
             email: value.data().email,
-            dob: moment(value.data().bob),
+            dob: moment(value.data().dob.toDate()),
             name: value.data().name,
         })
         setFileList([{uid:user.uid,url:user.photoURL}])
@@ -30,28 +30,29 @@ const ProfileContent = ()=>{
     useEffect(()=>{
         onReload()
     },[value])
-    const onFinish = (values)=>{
+    const onFinish = async (values)=>{
         const messKey = 'updateprofile'
-        const data = {
+        var data = {
             name: values['name'],
-            dob: values['dob'].format('YYYY-MM-DD'),
+            dob: new Date(values['dob'].format('YYYY-MM-DD')),
             updatedAt: new Date(),
         }
         message.open({key:messKey, type:'loading', content:'Updating...'})
-            const storageRef = ref(storage,`avatar/${user.uid}`)
-            uploadBytes(storageRef,values['image'].file).then(snapshot=>{
-                getDownloadURL(snapshot.ref).then(url=> {
-                    updateProfile(user,{
-                        photoURL:url
-                    })
-                })
-                updateDoc(docRef,{...data,avatar: user.photoURL}).then(()=>{
-                    message.open({key:messKey,type:'success', content: 'Updating profile successfully'})
-                }).catch(err=>{
-                    message.open({key:messKey,type:'error', content: err.code})
-                })
-                
-            }).catch(err=>message.open({key:messKey,type:'error', content: err.code}))
+        if(values['image']!== undefined){
+            const file = values['image'].file;
+            const fileExtension = file.name.split('.').pop();
+            const storageRef = ref(storage,`avatar/${user.uid}.${fileExtension}`)
+            const uploadFile = await uploadBytes(storageRef,file)
+            const photoURL = await getDownloadURL(uploadFile.ref)
+            await updateProfile(user, {photoURL: photoURL})
+            data = {...data, avatar: photoURL}
+        }
+        updateDoc(doc(db,'users',user.uid),data).then(async ()=>{
+            await updateProfile(user,{displayName: data.name})
+            message.open({content:'Update profile successfully', type: 'success', key:messKey})
+        }).catch(err=>{
+            message.open({type: 'error', key:messKey, content:`Error: ${err.code}`})
+        })
     }
     return(
         <Skeleton active loading = {loading}>
@@ -59,7 +60,7 @@ const ProfileContent = ()=>{
             {value&&<h3 style={{marginLeft: '3em', color:'#3498DB'}}>{`${value.data().name}'s Profiles`}</h3>}
             <Form
                 labelCol={{span:8}}
-                wrapperColCol={{span:16}}
+                wrapperCol={{span:16}}
                 layout="horizontal"
                 style={{maxWidth: 600}}
                 ref={formRef}
@@ -90,7 +91,7 @@ const ProfileContent = ()=>{
                         }
                     })]}
                 >
-                    <DatePicker style={{minWidth: 400}}  format='DD-MM-YYYY'/>
+                    <DatePicker style={{width: '100%'}}  format='DD-MM-YYYY'/>
                 </Form.Item>
                 <Form.Item
                     name='image'

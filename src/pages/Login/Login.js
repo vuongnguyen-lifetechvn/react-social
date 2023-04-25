@@ -34,7 +34,7 @@ const LoginPage = ()=>{
             setDoc(docRef,{
               email: user.email,
               name: user.displayName,
-              dob: moment().format('YYYY-MM-DD'),
+              dob: new Date(moment().format('YYYY-MM-DD')),
               avatar: user.photoURL,
               createdAt: new Date(),
               updatedAt: null
@@ -58,7 +58,7 @@ const LoginPage = ()=>{
             setDoc(docRef,{
               email: user.email,
               name: user.displayName,
-              dob: moment().format('YYYY-MM-DD'),
+              dob: new Date(moment().format('YYYY-MM-DD')),
               avatar: user.photoURL,
               createdAt: new Date(),
               updatedAt: null
@@ -82,7 +82,7 @@ const LoginPage = ()=>{
             setDoc(docRef,{
               email: user.email,
               name: user.displayName,
-              dob: moment().format('YYYY-MM-DD'),
+              dob: new Date(moment().format('YYYY-MM-DD')),
               avatar: user.photoURL,
               createdAt: new Date(),
               updatedAt: null

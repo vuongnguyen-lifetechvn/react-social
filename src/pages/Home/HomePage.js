@@ -19,7 +19,12 @@ const HomePage =  ()=>{
     const [currentContent,SetcurrentContent] = useState();
     useEffect(()=>{
             onAuthStateChanged(auth,(user)=>{
+                if(user){
                 setUser(user)
+                }
+               else{
+                navigate('/login')
+               }
             })
         SetcurrentContent(<HomeContent/>)
     },[user,auth])

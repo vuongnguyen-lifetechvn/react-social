@@ -1,3 +1,8 @@
 #ant-menu-item{
     transition: all 0.5s;
 }
+
+#ant-card-body{
+    min-height: 170px;
+    max-height: 170px;
+}

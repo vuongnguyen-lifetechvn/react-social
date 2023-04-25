@@ -18,14 +18,14 @@ const RegisterPage = ()=>{
         const data = {
             name: values['username'],
             email: values['email'],
-            dob: values['dateOfBirth'].format('YYYY-MM-DD'),
-            avatar: 'https://firebasestorage.googleapis.com/v0/b/vuongnguyen-social.appspot.com/o/avatar%2FDefault.png?alt=media',
+            dob: new Date(values['dateOfBirth'].format('YYYY-MM-DD')),
+            avatar: 'https://firebasestorage.googleapis.com/v0/b/vuongnguyen-social.appspot.com/o/avatar%2FDefault.png?alt=media&token=352f2ecc-c124-4495-b12a-ced15c9ff5cc',
             createdAt: new Date(),
             updateAt: null
         }
         createUserWithEmailAndPassword(auth,values['email'],values['password']).then(async (userCredential)=>{
             const user = userCredential.user;
-            await updateProfile(user, {displayName: data.name})
+            await updateProfile(user, {displayName: data.name, photoURL: data.avatar})
             await setDoc(doc(db,"users",user.uid),data);
             messInfo = {...messInfo,type:'success',content:'Sign up successfully'}
             setTimeout(navigate('/login'),2000)

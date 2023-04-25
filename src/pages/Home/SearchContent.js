@@ -1,95 +1,100 @@
-import {SearchOutlined} from '@ant-design/icons';
+import { SearchOutlined, UserOutlined } from '@ant-design/icons';
 import { Avatar, Button, Col, Divider, Form, Input, List, Space, message } from 'antd';
 import { useState } from 'react';
 import { getAuth } from "firebase/auth";
-import {  addDoc, collection, doc, getDoc, getDocs, getFirestore, query, setDoc, where } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import initApp from '../../db';
 
-const SearchContent = ()=>{
+const SearchContent = () => {
     const db = getFirestore(initApp)
     const user = getAuth(initApp).currentUser
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
-    const searchData = async(values)=>{
-        setData([])
-        setLoading(true)
+    const searchData = async (values) => {
         const name = values['search'] === undefined ? '' : values['search']
-        const data = [];
-        const queryRef = query(collection(db,'users'),where('__name__','!=',user.uid))
-        getDocs(queryRef).then((snapShot=>{
-            snapShot.forEach(doc=>{
-                if(doc.data().name.includes(name)||doc.data().name.includes(name.toUpperCase()))
-                    data.push({...doc.data(),uid:doc.id})
+        const queryRef = query(collection(db, 'users'), where('__name__', '!=', user.uid))
+        onSnapshot(queryRef, async (querySnapshot) => {
+            setLoading(true)
+            const datas = [];
+            querySnapshot.forEach(doc => {
+                if (doc.data().name.includes(name) || doc.data().name.includes(name.toUpperCase())) {
+                    datas.push({ ...doc.data(), uid: doc.id })
+                }
             })
-        })).catch(err=>console.log(`Error: ${err.code}`))
-           .finally(()=>{
-            setData(data)
+            const newDatas = []
+            for (const data of datas) {
+                let isFollowing = false;
+                const userDoc = await getDoc(doc(db, 'following', user.uid, 'userFollowing', data.uid))
+                if (userDoc.exists()) {
+                    isFollowing = true
+                }
+                const newData = { ...data, isFollowing: isFollowing }
+                newDatas.push(newData)
+            }
+            setData(newDatas)
             setLoading(false)
         })
     }
-    async function followUser (item){
-        const docRef = doc(db,'following',user.uid,'userFollowing',item.uid)
+    async function followUser(item) {
+        const docRef = doc(db, 'following', user.uid, 'userFollowing', item.uid)
         const docSnap = await getDoc(docRef)
-        if(docSnap.exists()){
-            message.error(`You are followed ${item.name}`)
-            return;
+        if (docSnap.exists()) {
+            deleteDoc(docRef).then(() => {
+                message.success(`You are unFollowed ${item.name}`)
+                searchData({search: ''});
+            })
         }
-        const data = {
-            name: item.name,
-            avatar: item.avatar,
-            email: item.email
+        else {
+            setDoc(docRef, {}).then(() => {
+                message.success(`You are Following ${item.name}`)
+                searchData({search: ''});
+            }).catch(err => message.error(`Error: ${err.code}`))
         }
-        console.log(data);
-        setDoc(docRef,data).then(
-            message.success(`You are following ${item.name}`)
-        ).catch(err=>message.error(`Error: ${err.code}`))
     }
     return (
         <>
-        <Form
-            onFinish={searchData}
-            layout='horizontal'
+            <Form
+                onFinish={searchData}
+                layout='inline'
             >
-            <Space direction='horizontal' align='center'>
                 <Form.Item
+                    style={{ width: '40%' }}
                     name='search'
-                    label='Search User'
                 >
-                    <Input placeholder='User name' />
+                    <Input placeholder='User name' prefix={<UserOutlined />} />
                 </Form.Item>
                 <Form.Item>
                     <Button htmlType='submit'>
-                        <SearchOutlined/>
+                        <SearchOutlined />
                     </Button>
                 </Form.Item>
-            </Space>
-        </Form>
-        <List
-        pagination
-        loading={loading}
-        dataSource={data}
-        renderItem={(item) => (
-          <Col span={24}>
-            <List.Item
-            >
-            <List.Item.Meta
-              avatar={
-                <Avatar src={`${item.avatar}`} />
-              }
-              title={item.name}
-              description={item.email}
+            </Form>
+            <List
+                pagination
+                loading={loading}
+                dataSource={data}
+                renderItem={(item) => (
+                    <Col span={24}>
+                        <List.Item
+                        >
+                            <List.Item.Meta
+                                avatar={
+                                    <Avatar src={`${item.avatar}`} />
+                                }
+                                title={item.name}
+                                description={item.email}
+                            />
+                            <Space size={'small'}>
+                                <Button >Details</Button>
+                                <Divider type='vertical' />
+                                <a onClick={(e) => { e.preventDefault(); followUser(item); }}>{item.isFollowing ? `unFollow` : `Follow`}</a>
+                            </Space>
+                        </List.Item>
+                    </Col>
+                )}
             />
-            <Space>
-                <Button >Details</Button>
-                <Divider type='vertical' />
-                <a onClick={(e)=>{e.preventDefault(); followUser(item);}}>Follow</a>
-            </Space>
-          </List.Item>
-          </Col>
-        )}
-      />
         </>
-        
+
     )
 }
 
