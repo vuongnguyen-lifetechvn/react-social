@@ -1,20 +1,24 @@
 import { getAuth } from "firebase/auth"
 import initApp from "../../db"
-import { getFirestore, collection, getDoc, query, orderBy, doc, onSnapshot, getDocs, collectionGroup } from 'firebase/firestore';
+import { getFirestore, collection, getDoc, query, orderBy, doc, onSnapshot, getDocs, collectionGroup, where, getCountFromServer, documentId } from 'firebase/firestore';
 import { List, Skeleton, Space, Avatar, Card, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { HeartOutlined, CommentOutlined, EllipsisOutlined } from "@ant-design/icons";
 import moment from "moment";
 import Meta from "antd/es/card/Meta";
 import Comments from "../../components/comments";
+import Emoji from "../../components/emoji"
+
 import './all.css'
 const HomeContent = () => {
     const auth = getAuth(initApp)
     const db = getFirestore(initApp)
     const user = auth.currentUser;
     const [data, setData] = useState([])
+    const [emojiPost, setEmojiPost] = useState([])
     const [loading, setLoading] = useState(false)
-    const [openModal, setOpenModal] = useState(false)
+    const [openComment, setOpenComment] = useState(false)
+    const [openEmoji, setOpenEmoji] = useState(false)
     const [postId, setPostId] = useState(' ');
     const fetchData = async () => {
         setLoading(true)
@@ -42,23 +46,51 @@ const HomeContent = () => {
                     newPosts.push(newPost)
                 }
             }
-
             setData(newPosts)
             setLoading(false)
         })
-        
+    }
 
+    const fetchEmoji = async ()=>{
+        const emojiRef = collectionGroup(db,'emojiPost');
+        onSnapshot(emojiRef, async querySnaps=>{
+            const emoji = []
+            querySnaps.forEach(snap=>{
+                if(snap.ref.path.substring(9,37) === user.uid){
+                    const emo = {...snap.data(), postId: snap.id}
+                    emoji.push(emo)
+                }
+            })
+
+            const emojiPost = []
+            for (const emo of emoji) {
+                const emoRef = await getDoc(doc(db,emo.emojiRef))
+                const item = {...emoRef.data(), ...emo}
+                emojiPost.push(item)
+            }
+            console.log(emojiPost);
+        })
     }
-    const toggleModal = (id) => {
+
+    const toggleModalComment = (id) => {
         setPostId(id)
-        setOpenModal(!openModal)
+        setOpenComment(!openComment)
     }
-    const onCancel = ()=>{
-        setOpenModal(!openModal)
+    const onCancelComment = ()=>{
+        setOpenComment(!openComment)
+    }
+
+    const toggleModalEmoji = (id) => {
+        setPostId(id)
+        setOpenEmoji(!openEmoji)
+    }
+    const onCancelEmoji= ()=>{
+        setOpenEmoji(!openEmoji)
     }
 
     useEffect(() => {
         fetchData()
+        fetchEmoji()
     }, [])
 
     return (
@@ -83,8 +115,8 @@ const HomeContent = () => {
                                 <Card
                                     key={item.id}
                                     actions={[
-                                        <HeartOutlined key="like" />,
-                                        <CommentOutlined key="comment" onClick={() => toggleModal(item.id)} />,
+                                        <img style={{width:32, height: 32}} key="like" src={item.emoji} alt={item.title} onClick={()=>toggleModalEmoji(item.id)}/>,
+                                        <CommentOutlined key="comment" onClick={() => toggleModalComment(item.id)} />,
                                         <EllipsisOutlined key="ellipsis" />,
                                     ]}
                                     extra={<a onClick={(e) => { e.preventDefault() }}>Read more</a>}
@@ -101,7 +133,8 @@ const HomeContent = () => {
                     />}
                 </Skeleton>
             </Space>
-            <Comments isOpen={openModal} onCancel={onCancel} id={postId} />
+            <Comments isOpen={openComment} onCancel={onCancelComment} id={postId} />
+            <Emoji isOpened={openEmoji} onCancel={onCancelEmoji} postId={postId} />
         </>
     )
 }

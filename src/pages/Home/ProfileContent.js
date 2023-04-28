@@ -91,7 +91,7 @@ const ProfileContent = ()=>{
                         }
                     })]}
                 >
-                    <DatePicker style={{width: '100%'}}  format='DD-MM-YYYY'/>
+                    <DatePicker style={{width: '100%'}}/>
                 </Form.Item>
                 <Form.Item
                     name='image'

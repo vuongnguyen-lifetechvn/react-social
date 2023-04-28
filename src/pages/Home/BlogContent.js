@@ -29,15 +29,16 @@ const BlogContent = () => {
     const toggleEdit = ()=>{
         setOpenEdit(!openEdit)
     }
-    const showConfirmDelete = ()=>{
+    const showConfirmDelete = (id)=>{
         confirm({
             title: 'Are you sure delete this post?',
             icon: <ExclamationCircleFilled/>,
-            onCancel (){},
-            onOk (){
+            onCancel: ()=>{},
+            onOk: async ()=>{
                 message.open({key:'delete', type:'loading',content:'Deleting...'})
-                deleteDoc(doc(db,'posts',user.uid,'userPosts',postId)).then(()=>{
-                    deleteDoc(doc(db,'comments',postId)).then(message.open({key:'delete', type:'success',content:'Deleting post success!'}))
+                await deleteDoc(doc(db,'posts',user.uid,'userPosts',id)).then(async ()=>{
+                    await deleteDoc(doc(db,'comments',id))
+                    message.open({key:'delete', type:'success',content:'Deleting post success!'})
                 }).catch(err=>console.log(`Error: ${err.code}`))
             }
         })
@@ -45,8 +46,7 @@ const BlogContent = () => {
 
     const fetchPosts = async ()=>{
         const postRef = query(colRef, orderBy('createdAt','desc'));
-        onSnapshot(postRef, async (querySnaphot)=>{
-            setLoading(true)
+        onSnapshot(postRef, (querySnaphot)=>{
             const posts = []
             querySnaphot.forEach(doc=>{
                 const post = {...doc.data(), id: doc.id}
@@ -127,8 +127,7 @@ const BlogContent = () => {
                                                 toggleEdit()
                                             }} />,
                                             <DeleteOutlined key="delete" onClick={()=>{
-                                                setPostId(item.id)
-                                                showConfirmDelete()  
+                                                showConfirmDelete(item.id)  
                                             }}/>,
                                             <EllipsisOutlined key="ellipsis" />
                                         ]}
