@@ -1,4 +1,4 @@
-import { Modal, List, Form, Input, Button, Skeleton, message, Space } from "antd"
+import { Modal, List, Form, Input, Button, Skeleton, message, Space, Dropdown } from "antd"
 import { SendOutlined } from '@ant-design/icons';
 import { Comment } from '@ant-design/compatible';
 import moment from "moment";
@@ -6,18 +6,18 @@ import React, { useEffect, useState } from "react";
 import { addDoc, collection, collectionGroup, doc, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import initApp from "../db";
+import _ from 'lodash'
 
-const CommentsModal = ({isOpen, onCancel, id})=>{
+const CommentsModal = ({isOpen, onCancel, postId})=>{
     const user = getAuth(initApp).currentUser
     const db = getFirestore(initApp)
     const [comments,setComments] = useState([])
     const [emoji, setEmoji] = useState([]);
+    const [reaction, setReaction] = useState([]);
     const [loading,setLoading] = useState(true)
     const [form] = Form.useForm()
     const fetchComment = async ()=>{
-        setLoading(true)
-        const commentsRef = query(collection(db,'comments',id,'postComments'),orderBy('createdAt','desc'))
-        const reactionsRef = query(collectionGroup(db,'emojiComment'),where('postId','==',id))
+        const commentsRef = query(collection(db,'comments',postId,'postComments'),orderBy('createdAt','desc'))
         const blockingRef = collection(db,'blocking',user.uid,'userBlocking')
         const blockUser = []
         const userDocs = await getDocs(blockingRef)
@@ -42,18 +42,6 @@ const CommentsModal = ({isOpen, onCancel, id})=>{
             }
             setComments(newComments)
         })
-
-        onSnapshot(reactionsRef, async snapshots=>{
-            const reactions = []
-            snapshots.forEach(async snapshot=>{
-                const reactionDoc = await getDoc(doc(db,snapshot.data().emojiRef))
-                const img = `https://firebasestorage.googleapis.com/v0/b/vuongnguyen-social.appspot.com/o/emoji%2F${reactionDoc.data().title}.png?alt=media`
-                const reaction = {...reactionDoc.data(), img:img, commentId: snapshot.id}
-                reactions.push(reaction)
-                console.log(reaction);
-            })
-        })
-
     }
 
     const fetchEmoji = async ()=>{
@@ -68,8 +56,36 @@ const CommentsModal = ({isOpen, onCancel, id})=>{
         setEmoji(data)
     }
 
+    const fetchReaction = async ()=>{
+        const ref = query(collectionGroup(db,'emojiComment'), where('postId','==',postId))
+        onSnapshot(ref, async (snapshots)=>{
+            const reactions = []
+            snapshots.forEach(snapshot=>{
+                const reaction = {...snapshot.data(), commentId: snapshot.id}
+                reactions.push(reaction)
+            })
+            setReaction(_.groupBy(reactions,'commentId'))
+        })
+    }
+
+    const countReaction = (commentId, emojiId) => {
+        const blockingUser = []
+        getDocs(collection(db,'blocking',user.uid,'userBlocking')).then(snaps=>{
+            snaps.forEach(snap=>{
+                blockingUser.push(snap.id)
+            })
+        })
+        const reactions = reaction[commentId]
+        var count = 0
+        reactions&&reactions.forEach(react =>{
+            if(react.emojiRef === `emoji/${emojiId}`)
+            count++
+        })
+        return count;
+    }
+
     const sendComment = (values)=>{
-        const commentRef = collection(db,'comments',id,'postComments')
+        const commentRef = collection(db,'comments',postId,'postComments')
         const data = {
             userRef: `users/${user.uid}`,
             content: values['content'],
@@ -83,7 +99,8 @@ const CommentsModal = ({isOpen, onCancel, id})=>{
         const emojiRef = doc(db, 'reaction', user.uid,'emojiComment',commentId)
         const emojiDoc = await getDoc(emojiRef)
         var data = {
-            emojiRef: `emoji/${emoji.id}`
+            emojiRef: `emoji/${emoji.id}`,
+            postId: postId
         }
         if(emojiDoc.exists()){
             data = {...data, updatedAt: new Date()}
@@ -95,15 +112,16 @@ const CommentsModal = ({isOpen, onCancel, id})=>{
     }
 
     useEffect(()=>{
-        if (id !== ' ') {
+        if (postId !== ' ') {
             (async ()=>{
                 form.resetFields()
                 await fetchComment()
                 await fetchEmoji()
+                await fetchReaction()
             })()
         }
         setLoading(false)
-    },[id])
+    },[postId])
     return (
         <Modal
             forceRender 
@@ -120,23 +138,25 @@ const CommentsModal = ({isOpen, onCancel, id})=>{
                 dataSource={comments}
                 renderItem={(item)=>(
                     <List.Item>
-                        <Comment
-                            author={item.user.name}
-                            avatar={item.user.avatar}
-                            content={item.content}
-                            datetime={moment(item.createdAt.toDate()).fromNow()}
-                            actions={[
-                                <Space>
-                                {emoji&&emoji.map((e,index)=>(
-                                    <React.Fragment key={index}>
-                                    <img style={{maxWidth: 36, maxHeight: 36}} src={e.img} alt={e.title} onClick={()=> sendEmoji(e, item.commentId)}/>
-                                    <p>0</p>
-                                    </React.Fragment>
-                                ))}
-                                </Space>
-                            ]}
-                        >
-                        </Comment>
+                        <Dropdown trigger={['contextMenu']} menu={{items: emoji.map((e,index)=>({key:index, label: <img style={{maxWidth: 32, maxHeight: 32}} src={e.img} alt={e.title}/>}))}}>
+                            <Comment
+                                author={item.user.name}
+                                avatar={item.user.avatar}
+                                content={item.content}
+                                datetime={moment(item.createdAt.toDate()).fromNow()}
+                                actions={[
+                                    <Space>
+                                    {emoji.map((e,index)=>(
+                                        <React.Fragment key={index}>
+                                        <img style={{maxWidth: 36, maxHeight: 36}} src={e.img} alt={e.title} onClick={()=> sendEmoji(e, item.commentId)}/>
+                                        <p>{countReaction(item.commentId, e.id)}</p>
+                                        </React.Fragment>
+                                    ))}
+                                    </Space>
+                                ]}
+                            >
+                            </Comment>
+                        </Dropdown>
                     </List.Item>  
                 )}
             >

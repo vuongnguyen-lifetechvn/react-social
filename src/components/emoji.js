@@ -1,6 +1,6 @@
 import { } from '@ant-design/icons'
 import { Divider, List, Modal, Skeleton, Space, Tooltip } from 'antd'
-import { addDoc, collection, collectionGroup, doc, documentId, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore'
+import { addDoc, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore'
 import initApp from '../db'
 import { getAuth } from 'firebase/auth'
 import { useEffect, useState } from 'react'
@@ -26,7 +26,14 @@ const Emoji = ({ postId, onCancel, isOpened }) => {
     }
 
     const fetchData = async () => {
+        const blockingUser = []
         const ref = query(collectionGroup(db,'emojiPost'),orderBy('createdAt','asc'), where('postId','==',postId))
+
+        getDocs(collection(db,'blocking',user.uid,'userBlocking')).then(snaps=>{
+            snaps.forEach(snap=>{
+                blockingUser.push(snap.id)
+            })
+        })
         onSnapshot(ref, async (snapshot)=>{
             const reactions = []
             snapshot.forEach(async snap=>{
@@ -37,10 +44,12 @@ const Emoji = ({ postId, onCancel, isOpened }) => {
 
             const filtered = []
             for (const reaction of reactions) {
-                const userDoc = await getDoc(doc(db,'users',reaction.uid))
-                const reactDoc = await getDoc(doc(db,reaction.emojiRef))
-                const filter = {...reactDoc.data() ,user: userDoc.data()}
-                filtered.push(filter)
+                if(!blockingUser.includes(reaction.uid)){
+                    const userDoc = await getDoc(doc(db,'users',reaction.uid))
+                    const reactDoc = await getDoc(doc(db,reaction.emojiRef))
+                    const filter = {...reactDoc.data() ,user: userDoc.data()}
+                    filtered.push(filter)
+                }
             }
             setData(filtered)
         })
@@ -54,8 +63,12 @@ const Emoji = ({ postId, onCancel, isOpened }) => {
             postId: postId
         }
         if(docSnap.exists()){
-            data = {...data,updatedAt: new Date()}
-            await updateDoc(ref,data)
+            if(docSnap.data().emojiRef === `emoji/${emoji.id}`){
+                await deleteDoc(ref);
+            }else{
+                data = {...data,updatedAt: new Date()}
+                await updateDoc(ref,data)
+            }
         }else {
             data = {...data,createdAt: new Date()}
             await setDoc(ref,data)

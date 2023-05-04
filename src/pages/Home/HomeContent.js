@@ -68,8 +68,18 @@ const HomeContent = () => {
                 const item = {...emoRef.data(), ...emo}
                 emojiPost.push(item)
             }
-            console.log(emojiPost);
+            setEmojiPost(emojiPost)
         })
+    }
+
+    const getEmojiPost = (postId)=>{
+        const emoji = [...emojiPost]
+        for (const e of emoji) {
+            if(e.postId === postId){
+                return e.img
+            }
+        }
+        return 'https://firebasestorage.googleapis.com/v0/b/vuongnguyen-social.appspot.com/o/emoji%2Fdefault.png?alt=media';
     }
 
     const toggleModalComment = (id) => {
@@ -115,7 +125,7 @@ const HomeContent = () => {
                                 <Card
                                     key={item.id}
                                     actions={[
-                                        <img style={{width:32, height: 32}} key="like" src={item.emoji} alt={item.title} onClick={()=>toggleModalEmoji(item.id)}/>,
+                                        <img style={{width:28, height: 28}} key="like" src={getEmojiPost(item.id)} alt={item.title} onClick={()=>toggleModalEmoji(item.id)}/>,
                                         <CommentOutlined key="comment" onClick={() => toggleModalComment(item.id)} />,
                                         <EllipsisOutlined key="ellipsis" />,
                                     ]}
@@ -133,7 +143,7 @@ const HomeContent = () => {
                     />}
                 </Skeleton>
             </Space>
-            <Comments isOpen={openComment} onCancel={onCancelComment} id={postId} />
+            <Comments isOpen={openComment} onCancel={onCancelComment} postId={postId} />
             <Emoji isOpened={openEmoji} onCancel={onCancelEmoji} postId={postId} />
         </>
     )
