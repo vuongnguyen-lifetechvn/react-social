@@ -1,6 +1,6 @@
-import { Avatar, Button, Card, Dropdown, Form, Input, List, Modal, Skeleton, Space, Tooltip, message } from "antd"
+import { Avatar, Button, Card, Form, Input, List, Modal, Skeleton, Space, Tooltip, message } from "antd"
 import Meta from "antd/es/card/Meta";
-import { HeartOutlined, CommentOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined, ExclamationCircleFilled } from "@ant-design/icons";
+import { EllipsisOutlined, EditOutlined, DeleteOutlined, ExclamationCircleFilled } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
@@ -116,8 +116,6 @@ const BlogContent = () => {
                                     <Card
                                         key={item.id}
                                         actions={[
-                                            <HeartOutlined key="like" />,
-                                            <CommentOutlined key="comment" />,
                                             <EditOutlined key="edit" onClick={() => {
                                                 setPostId(item.id)
                                                 formEdit.setFieldsValue({

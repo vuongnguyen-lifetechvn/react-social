@@ -3,7 +3,7 @@ import { SendOutlined } from '@ant-design/icons';
 import { Comment } from '@ant-design/compatible';
 import moment from "moment";
 import React, { useEffect, useState } from "react";
-import { addDoc, collection, collectionGroup, doc, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, setDoc, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import initApp from "../db";
 import _ from 'lodash'
@@ -103,8 +103,12 @@ const CommentsModal = ({isOpen, onCancel, postId})=>{
             postId: postId
         }
         if(emojiDoc.exists()){
-            data = {...data, updatedAt: new Date()}
-            await updateDoc(emojiRef,data)
+            if(emojiDoc.data().emojiRef === `emoji/${emoji.id}`){
+                await deleteDoc(emojiRef)
+            }else{
+                data = {...data, updatedAt: new Date()}
+                await updateDoc(emojiRef,data)
+            }
         }else{
             data = {...data, createdAt: new Date()}
             await setDoc(emojiRef, data)
@@ -138,7 +142,6 @@ const CommentsModal = ({isOpen, onCancel, postId})=>{
                 dataSource={comments}
                 renderItem={(item)=>(
                     <List.Item>
-                        <Dropdown trigger={['contextMenu']} menu={{items: emoji.map((e,index)=>({key:index, label: <img style={{maxWidth: 32, maxHeight: 32}} src={e.img} alt={e.title}/>}))}}>
                             <Comment
                                 author={item.user.name}
                                 avatar={item.user.avatar}
@@ -156,7 +159,6 @@ const CommentsModal = ({isOpen, onCancel, postId})=>{
                                 ]}
                             >
                             </Comment>
-                        </Dropdown>
                     </List.Item>  
                 )}
             >

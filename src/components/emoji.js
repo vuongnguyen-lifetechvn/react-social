@@ -28,11 +28,9 @@ const Emoji = ({ postId, onCancel, isOpened }) => {
     const fetchData = async () => {
         const blockingUser = []
         const ref = query(collectionGroup(db,'emojiPost'),orderBy('createdAt','asc'), where('postId','==',postId))
-
-        getDocs(collection(db,'blocking',user.uid,'userBlocking')).then(snaps=>{
-            snaps.forEach(snap=>{
-                blockingUser.push(snap.id)
-            })
+        const blockingDoc = await getDocs(collection(db,'blocking',user.uid,'userBlocking'))
+        blockingDoc.forEach(snap=>{
+            blockingUser.push(snap.id)
         })
         onSnapshot(ref, async (snapshot)=>{
             const reactions = []
@@ -96,6 +94,7 @@ const Emoji = ({ postId, onCancel, isOpened }) => {
             open={isOpened}
             onCancel={onCancel}
             footer={null}
+            style={{position: 'relative'}}
         >
             <Skeleton active loading={loading}>
                 <List
@@ -107,16 +106,16 @@ const Emoji = ({ postId, onCancel, isOpened }) => {
                                 author={item.user.name}
                                 avatar={item.user.avatar}
                                 content={<img style={{maxHeight: 80, maxWidth: 80}} src={item.img} />}
-                                datetime={moment(item.createdAt.toDate()).fromNow()}
+                                //datetime={moment((item.updatedAt||item.createdAt).toDate()).fromNow()}
                             />
                         </List.Item>
                     )}
                 />
                 <Divider type='horizontal'/>
-                <Space direction='horizontal' style={{marginLeft: 20}}>
+                <Space direction='horizontal' style={{position:'relative', left:'13%'}}>
                     {emoji && emoji.map((e,index)=> (
                         <Tooltip title={e.title} key={index}>
-                            <img style={{maxWidth: 64, maxHeight: 64}} src={e.img} alt={e.title}  onClick={()=>sendEmoji(e)}/>
+                            <img style={{maxWidth: 52, maxHeight: 52}} src={e.img} alt={e.title}  onClick={()=>sendEmoji(e)}/>
                         </Tooltip>
                     ))}
                 </Space>

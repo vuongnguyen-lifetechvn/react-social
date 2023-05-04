@@ -2,7 +2,7 @@ import { SearchOutlined, UserOutlined } from '@ant-design/icons';
 import { Avatar, Button, Col, Divider, Form, Input, List, Space, message } from 'antd';
 import { useState } from 'react';
 import { getAuth } from "firebase/auth";
-import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, query, setDoc, where } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import initApp from '../../db';
 
 const SearchContent = () => {
@@ -10,22 +10,8 @@ const SearchContent = () => {
     const user = getAuth(initApp).currentUser
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
-    const emoji = ['like','dislike','heart','okay','smile','cry']
-
-    const save = async ()=>{
-        const ref = collection(db,'emoji')
-        emoji.map(async (e,index)=>{
-            await addDoc(ref,{
-                img: `https://firebasestorage.googleapis.com/v0/b/vuongnguyen-social.appspot.com/o/emoji%2F${e}.png?alt=media`,
-                createdAt: new Date(),
-                index: index,
-                title: e,
-            })
-        })
-    }
 
     const searchData = async (values) => {
-        await save()
         const name = values['search'] === undefined ? '' : values['search']
         const queryRef = query(collection(db, 'users'), where('__name__', '!=', user.uid))
         onSnapshot(queryRef, async (querySnapshot) => {

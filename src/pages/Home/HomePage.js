@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Layout,Menu,Row,Skeleton,theme, Badge, Space } from 'antd';
+import { Layout,Menu,Skeleton,theme } from 'antd';
 import { HomeOutlined,BookOutlined, UserOutlined, SettingOutlined, LogoutOutlined, LoginOutlined, SearchOutlined} from '@ant-design/icons';
 import HomeContent from './HomeContent';
 import BlogContent from './BlogContent'

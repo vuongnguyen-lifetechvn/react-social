@@ -1,9 +1,9 @@
 import { getAuth } from "firebase/auth"
 import initApp from "../../db"
-import { getFirestore, collection, getDoc, query, orderBy, doc, onSnapshot, getDocs, collectionGroup, where, getCountFromServer, documentId } from 'firebase/firestore';
-import { List, Skeleton, Space, Avatar, Card, Tooltip } from "antd";
+import { getFirestore, collection, getDoc, query, orderBy, doc, onSnapshot, getDocs, collectionGroup, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { List, Skeleton, Space, Avatar, Card, Tooltip, Dropdown } from "antd";
 import { useEffect, useState } from "react";
-import { HeartOutlined, CommentOutlined, EllipsisOutlined } from "@ant-design/icons";
+import { CommentOutlined, EllipsisOutlined } from "@ant-design/icons";
 import moment from "moment";
 import Meta from "antd/es/card/Meta";
 import Comments from "../../components/comments";
@@ -16,6 +16,7 @@ const HomeContent = () => {
     const user = auth.currentUser;
     const [data, setData] = useState([])
     const [emojiPost, setEmojiPost] = useState([])
+    const [emoji, setEmoji] = useState([])
     const [loading, setLoading] = useState(false)
     const [openComment, setOpenComment] = useState(false)
     const [openEmoji, setOpenEmoji] = useState(false)
@@ -50,8 +51,18 @@ const HomeContent = () => {
             setLoading(false)
         })
     }
+    const fetchEmoji = async () => {
+        const data = []
+        const emojiRef = query(collection(db, 'emoji'), orderBy('index', 'asc'))
+        const emojiDocs = await getDocs(emojiRef)
+        emojiDocs.forEach(emojiDoc => {
+            const item = { ...emojiDoc.data(), id: emojiDoc.id }
+            data.push(item)
+        })
+        setEmoji(data)
+    }
 
-    const fetchEmoji = async ()=>{
+    const fetchEmojiPost = async ()=>{
         const emojiRef = collectionGroup(db,'emojiPost');
         onSnapshot(emojiRef, async querySnaps=>{
             const emoji = []
@@ -82,6 +93,27 @@ const HomeContent = () => {
         return 'https://firebasestorage.googleapis.com/v0/b/vuongnguyen-social.appspot.com/o/emoji%2Fdefault.png?alt=media';
     }
 
+    const sendEmoji = async (emoji, postId)=>{
+        const ref = doc(db,'reaction',user.uid,'emojiPost',postId)
+        const docSnap = await getDoc(ref)
+        var data = {
+            emojiRef: `emoji/${emoji.id}`,
+            postId: postId
+        }
+        if(docSnap.exists()){
+            if(docSnap.data().emojiRef === `emoji/${emoji.id}`){
+                await deleteDoc(ref);
+            }else{
+                data = {...data,updatedAt: new Date()}
+                await updateDoc(ref,data)
+            }
+        }else {
+            data = {...data,createdAt: new Date()}
+            await setDoc(ref,data)
+        }
+
+    }
+
     const toggleModalComment = (id) => {
         setPostId(id)
         setOpenComment(!openComment)
@@ -100,6 +132,7 @@ const HomeContent = () => {
 
     useEffect(() => {
         fetchData()
+        fetchEmojiPost()
         fetchEmoji()
     }, [])
 
@@ -125,7 +158,9 @@ const HomeContent = () => {
                                 <Card
                                     key={item.id}
                                     actions={[
-                                        <img style={{width:28, height: 28}} key="like" src={getEmojiPost(item.id)} alt={item.title} onClick={()=>toggleModalEmoji(item.id)}/>,
+                                        <Dropdown trigger={['contextMenu']} menu={{items: emoji.map((e,index)=>({key:index, label: <img style={{maxWidth: 32, maxHeight: 32}} src={e.img} alt={e.title} onClick={()=>sendEmoji(e, item.id)}/>}))}}>
+                                        <img style={{width:28, height: 28}} key="like" src={getEmojiPost(item.id)} alt={item.title} onClick={()=>toggleModalEmoji(item.id)}/>
+                                        </Dropdown>,
                                         <CommentOutlined key="comment" onClick={() => toggleModalComment(item.id)} />,
                                         <EllipsisOutlined key="ellipsis" />,
                                     ]}
