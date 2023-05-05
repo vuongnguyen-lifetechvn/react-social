@@ -4,11 +4,10 @@ import { EllipsisOutlined, EditOutlined, DeleteOutlined, ExclamationCircleFilled
 import { useEffect, useState } from "react";
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
-import initApp from "../../db";
+import initApp from "../../../db";
 import moment from "moment";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import './all.css'
 const BlogContent = () => {
     const user = getAuth(initApp).currentUser;
     const db = getFirestore(initApp)
@@ -103,17 +102,19 @@ const BlogContent = () => {
                             grid={{
                                 gutter: 16,
                                 xs: 1,
-                                sm: 2,
-                                md: 2,
-                                lg: 2,
-                                xl: 2,
+                                sm: 1,
+                                md: 1,
+                                lg: 1,
+                                xl: 1,
                             }}
-                            itemLayout="horizontal"
+                            style={{ marginTop: 8, maxWidth: '600px', }}
+                            itemLayout="vertical"
                             size="large"
                             dataSource={posts}
                             renderItem={(item) => (
-                                <List.Item style={{ margin: '10px 0', padding: 0, minHeight: 280, minWidth: '60%' }}>
+                                <List.Item style={{ margin: '10px 0', padding: 0}}>
                                     <Card
+                                        style={{minWidth: '650px'}}
                                         key={item.id}
                                         actions={[
                                             <EditOutlined key="edit" onClick={() => {
@@ -129,7 +130,6 @@ const BlogContent = () => {
                                             }}/>,
                                             <EllipsisOutlined key="ellipsis" />
                                         ]}
-                                        extra={<a onClick={(e) => { e.preventDefault() }}>Read more</a>}
                                     >
                                         <Meta
                                             avatar={<Avatar src={user.photoURL} />}

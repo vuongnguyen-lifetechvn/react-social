@@ -1,0 +1,13 @@
+.profile{
+    position: relative;
+    min-width: 35vw;
+}
+.formButton{
+    position: absolute;
+    left: 13%;
+}
+@media screen and (max-width: 1150px) {
+    .profile{
+        min-width: 70vw;
+    }
+}

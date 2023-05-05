@@ -90,7 +90,7 @@ const Emoji = ({ postId, onCancel, isOpened }) => {
     }, [postId])
     return (
         <Modal
-            title={'Emoji ' + postId}
+            title={'Emoji'}
             open={isOpened}
             onCancel={onCancel}
             footer={null}

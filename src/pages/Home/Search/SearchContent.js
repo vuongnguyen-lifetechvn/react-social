@@ -3,7 +3,8 @@ import { Avatar, Button, Col, Divider, Form, Input, List, Space, message } from 
 import { useState } from 'react';
 import { getAuth } from "firebase/auth";
 import { collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, query, setDoc, where } from "firebase/firestore";
-import initApp from '../../db';
+import initApp from '../../../db';
+import './Search.css'
 
 const SearchContent = () => {
     const db = getFirestore(initApp)
@@ -77,7 +78,7 @@ const SearchContent = () => {
     }
 
     return (
-        <>
+        <Space direction='vertical' size={'large'} className='searchContent'>
             <Form
                 onFinish={searchData}
                 layout='inline'
@@ -118,7 +119,7 @@ const SearchContent = () => {
                     </Col>
                 )}
             />
-        </>
+        </Space>
 
     )
 }

@@ -1,15 +1,13 @@
 import { getAuth } from "firebase/auth"
-import initApp from "../../db"
+import initApp from "../../../db"
 import { getFirestore, collection, getDoc, query, orderBy, doc, onSnapshot, getDocs, collectionGroup, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { List, Skeleton, Space, Avatar, Card, Tooltip, Dropdown } from "antd";
 import { useEffect, useState } from "react";
 import { CommentOutlined, EllipsisOutlined } from "@ant-design/icons";
 import moment from "moment";
 import Meta from "antd/es/card/Meta";
-import Comments from "../../components/comments";
-import Emoji from "../../components/emoji"
-
-import './all.css'
+import Comments from "../../../components/comments";
+import Emoji from "../../../components/emoji"
 const HomeContent = () => {
     const auth = getAuth(initApp)
     const db = getFirestore(initApp)
@@ -30,7 +28,7 @@ const HomeContent = () => {
             followers.push(follower.id);
         })
         followers.push(user.uid)
-        const postRef = query(collectionGroup(db,'userPosts'), orderBy('createdAt','asc'));
+        const postRef = query(collectionGroup(db,'userPosts'), orderBy('createdAt','desc'));
         onSnapshot(postRef, async querySnap => {
             const posts = []
             querySnap.forEach(docs=>{
@@ -138,24 +136,25 @@ const HomeContent = () => {
 
     return (
         <>
-            <Space direction="vertical">
+            <Space direction="vertical" align="center">
                 <h2>Wellcome back, <span style={{ color: '#FF6F61' }}>{user.displayName}</span></h2>
                 <Skeleton loading={loading} active>
                     {data&&<List
                         grid={{
                             gutter: 16,
                             xs: 1,
-                            sm: 2,
-                            md: 2,
-                            lg: 2,
-                            xl: 2,
+                            sm: 1,
+                            md: 1,
+                            lg: 1,
+                            xl: 1,
                         }}
-                        itemLayout="horizontal"
-                        style={{ marginTop: 8 }}
+                        itemLayout="vertical"
+                        style={{ marginTop: 8, maxWidth: '600px', }}
                         dataSource={data}
                         renderItem={(item) => (
-                            <List.Item style={{ margin: '10px 8px', padding: 0,minHeight:280, minWidth:'60%', overflow: 'auto'}}>
+                            <List.Item style={{ margin: '10px 8px', padding: 0}}>
                                 <Card
+                                    style={{minWidth: '650px'}}
                                     key={item.id}
                                     actions={[
                                         <Dropdown trigger={['contextMenu']} menu={{items: emoji.map((e,index)=>({key:index, label: <img style={{maxWidth: 32, maxHeight: 32}} src={e.img} alt={e.title} onClick={()=>sendEmoji(e, item.id)}/>}))}}>
@@ -164,14 +163,13 @@ const HomeContent = () => {
                                         <CommentOutlined key="comment" onClick={() => toggleModalComment(item.id)} />,
                                         <EllipsisOutlined key="ellipsis" />,
                                     ]}
-                                    extra={<a onClick={(e) => { e.preventDefault() }}>Read more</a>}
-                                >
+                                    >
                                     <Meta
                                         avatar={<Avatar src={item.follower.avatar} />}
                                         title={item.title}
                                         description={<p><span style={{ fontWeight: 'bold', color: 'gray' }}>{item.follower.name}</span>  .  <Tooltip title={`${moment(item.createdAt && item.createdAt.toDate()).format('DD-MM-YYYY, h:mm:ss a')}`}>{moment(item.createdAt && item.createdAt.toDate()).fromNow()}</Tooltip></p>}
                                     />
-                                    {item.content !== "" ? <div dangerouslySetInnerHTML={{__html: item.content}}></div> :<p>There is no content</p>  }
+                                    {item.content !== "" ? <div style={{display:"block"}} dangerouslySetInnerHTML={{__html: item.content}}></div> :<p>There is no content</p>  }
                                 </Card>
                             </List.Item>
                         )}

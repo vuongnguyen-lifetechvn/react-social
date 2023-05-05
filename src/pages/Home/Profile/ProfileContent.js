@@ -2,12 +2,12 @@ import { Button, DatePicker, Form, Input, Row, Skeleton, Space, Upload, message 
 import {PlusOutlined } from "@ant-design/icons";
 import { useDocumentOnce } from "react-firebase-hooks/firestore";
 import { getStorage, ref, getDownloadURL, uploadBytes } from "firebase/storage";
-import initApp from "../../db";
+import initApp from "../../../db";
 import { getAuth, updateProfile } from "firebase/auth";
 import {  doc, getFirestore, updateDoc } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import moment from "moment/moment";
-
+import './Profile.css'
 const ProfileContent = ()=>{
     const user = getAuth(initApp).currentUser;
     const db = getFirestore(initApp)
@@ -56,13 +56,13 @@ const ProfileContent = ()=>{
     }
     return(
         <Skeleton active loading = {loading}>
+            <Space direction="vertical" className="profile">
             {error&&<h4 style={{textAlign:'center', color:'red'}}>Catch error:  {error}</h4>}
             {value&&<h3 style={{marginLeft: '3em', color:'#3498DB'}}>{`${value.data().name}'s Profiles`}</h3>}
             <Form
                 labelCol={{span:8}}
                 wrapperCol={{span:16}}
                 layout="horizontal"
-                style={{maxWidth: 600}}
                 ref={formRef}
                 onFinish={onFinish}
             >
@@ -107,8 +107,7 @@ const ProfileContent = ()=>{
                         </div>
                     </Upload>
                 </Form.Item>
-                <Row justify={'center'} >
-                <Space direction="horizontal">
+                <Space direction="horizontal" className="formButton" >
                     <Form.Item>
                         <Button type="default" onClick={onReload}>Reload</Button>
                     </Form.Item>
@@ -116,8 +115,8 @@ const ProfileContent = ()=>{
                         <Button type="primary" htmlType="submit">Update</Button>
                     </Form.Item>
                 </Space>
-                </Row>
             </Form>
+            </Space>
         </Skeleton>
     )
 }

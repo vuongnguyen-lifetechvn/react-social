@@ -4,5 +4,12 @@
 
 .ant-card-body{
     min-height: 170px;
-    max-height: 170px;
+}
+.ant-menu-item{
+    margin: 16 0;
+}
+@media screen and (max-width: 720px) {
+    .ant-card{
+        min-width: 80vw !important;
+    }
 }

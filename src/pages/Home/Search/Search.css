@@ -1,0 +1,9 @@
+.searchContent{
+    min-width: 40vw;
+}
+
+@media screen and (max-width:  1028) {
+    .searchContent{
+        min-width: 70vw;
+    }
+}

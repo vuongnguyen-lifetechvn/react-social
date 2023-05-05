@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Layout,Menu,Skeleton,theme } from 'antd';
+import { Divider, Layout,Menu,Skeleton,theme } from 'antd';
 import { HomeOutlined,BookOutlined, UserOutlined, SettingOutlined, LogoutOutlined, LoginOutlined, SearchOutlined} from '@ant-design/icons';
-import HomeContent from './HomeContent';
-import BlogContent from './BlogContent'
-import ProfileContent from './ProfileContent';
+import HomeContent from './Content/HomeContent';
+import BlogContent from './Blog/BlogContent'
+import ProfileContent from './Profile/ProfileContent';
 import { useNavigate } from 'react-router-dom';
 import initApp from '../../db';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import SearchContent from './SearchContent';
-
+import SearchContent from './Search/SearchContent';
+import './all.css'
 
 const { Header, Footer, Content } = Layout;
 
@@ -92,14 +92,18 @@ const HomePage =  ()=>{
 
     }
     return(
-      <>
-        <Layout style={{minHeight:'100vh'}}>
+      <Layout style={{minHeight:'100vh', backgroundColor:'#ffffff'}}>
             <Header
             style={{
-                background: colorBgContainer,
+                display:'flex',
+                justifyContent:'center',
+                backgroundColor:'#ffffff',
+                height: 90,
+                padding: '16px 35px'
               }}
             >
                     <Menu
+                    style={{fontSize: 17, minWidth: 540}}
                     mode='horizontal'
                     defaultSelectedKeys={['home']}
                     items={menuItems}
@@ -113,6 +117,8 @@ const HomePage =  ()=>{
                     padding: 24,
                     minHeight: 280,
                     background: colorBgContainer,
+                    display:'flex',
+                    justifyContent:'center'
                   }}
             >
                 {user?currentContent:<Skeleton active/>}
@@ -121,7 +127,6 @@ const HomePage =  ()=>{
                   <h3 style={{textAlign:'center'}}>Ant Design ©2023 Created by Ant UED</h3>
             </Footer>
         </Layout>
-      </>
     )
 }
 
