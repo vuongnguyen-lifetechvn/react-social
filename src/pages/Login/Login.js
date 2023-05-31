@@ -1,7 +1,7 @@
-import React from "react"
-import {Form, Input, message, Checkbox, Button, Space} from "antd"
+import React, { useState } from "react"
+import {Form, Input, message, Checkbox, Button, Space, Modal} from "antd"
 import { LockOutlined,MailOutlined, GoogleCircleFilled, GithubFilled, FacebookFilled } from "@ant-design/icons";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, GithubAuthProvider, FacebookAuthProvider } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, GithubAuthProvider, FacebookAuthProvider, sendPasswordResetEmail } from "firebase/auth";
 import { getFirestore, getDoc, setDoc, doc } from 'firebase/firestore';
 import initApp from '../../db.js'
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,8 @@ import './all.css'
 import moment from "moment";
 const auth = getAuth(initApp)
 const LoginPage = ()=>{
+    const [openModal, setOpenModal] = useState(false)
+    const [resetForm] = Form.useForm()
     const navigate = useNavigate();
     const onFinish = values => {
         const key = 'login'
@@ -20,6 +22,14 @@ const LoginPage = ()=>{
           message.open({key:key,type:'error', content:`Error: ${err.code}`})
         })
       };
+    const sendPasswordReset = (values)=>{
+      sendPasswordResetEmail(auth,values['email']).then(()=>{
+        message.success('Password reset email is sended')
+      }).catch(err=>{
+        message.error('Error: '+err.code)
+      })
+    }
+    const toggleModal = ()=> setOpenModal(!openModal)
       const signInWithGoogle = ()=>{
         const key = 'login'
         const provider = new GoogleAuthProvider();
@@ -128,7 +138,6 @@ const LoginPage = ()=>{
               <Form.Item name="remember" valuePropName="checked">
                 <Checkbox>Remember me</Checkbox>
               </Form.Item>
-    
               <Form.Item>
                 <Button type="primary" htmlType="submit" className="login-form-button">
                   LOGIN
@@ -137,6 +146,7 @@ const LoginPage = ()=>{
                 <Button type="none" onClick={()=>navigate('/register')} className="login-form-button">
                   REGISTER
                 </Button>
+                <a onClick={(e)=>{e.preventDefault(); toggleModal()}}>Forgotten password?</a>
               </Form.Item>
               <Space direction="horizontal" size={'middle'}>
               <p style={{fontSize:'14px'}}>Sign in with: </p>
@@ -146,6 +156,30 @@ const LoginPage = ()=>{
               </Space>
             </Form>
           </div>
+          <Modal
+            open={openModal}
+            onCancel={toggleModal}
+            okText="Send Email"
+            title = "Reset Password"
+            onOk={()=>{
+              resetForm.validateFields().then((values) => {
+                resetForm.resetFields()
+                sendPasswordReset(values)
+            }).catch(err => 0)
+            }}
+          >
+            <Form
+              form={resetForm}
+            >
+              <Form.Item
+                label="Email"
+                name="email"
+                rules={[{required: true, message: 'Please input your Email!'},{type:'email', message:'Please input valid Email!'}]}
+              >
+                <Input placeholder="Enter your email"/>
+              </Form.Item>
+            </Form>
+          </Modal>
         </div>
       );
 }
